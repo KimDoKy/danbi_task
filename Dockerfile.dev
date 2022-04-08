@@ -1,0 +1,13 @@
+FROM python:3.8.8
+
+WORKDIR /app
+RUN apt -y update
+RUN apt -y install vim
+
+COPY ./requirements/requirements-dev.txt ./requirements-dev.txt
+RUN pip install --upgrade pip
+RUN pip install -r ./requirements-dev.txt
+
+CMD python manage.py makemigrations --noinput
+CMD python manage.py migrate --noinput
+CMD python manage.py runserver 0.0.0.0:28172 --settings=conf.settings.dev

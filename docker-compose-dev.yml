@@ -1,0 +1,12 @@
+version: "3"
+services:
+  backend-dev:
+    build:
+      context: .
+      dockerfile: ./Dockerfile.dev
+    container_name: backend_service
+    restart: always
+    ports:
+      - 28172:28172
+    volumes:
+      - ./danbi_backend/.:/app
