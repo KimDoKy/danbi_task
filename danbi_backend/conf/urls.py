@@ -15,4 +15,5 @@ urlpatterns = [
     path('api/token/verify/', verify_jwt_token),
     path('api/token/refresh/', refresh_jwt_token),
     path('accounts/', include('accounts.urls', namespace='accounts')),
+    path('routines/', include('routines.urls', namespace='routines')),
 ]
