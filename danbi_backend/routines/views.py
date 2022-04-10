@@ -114,36 +114,38 @@ class RoutineView(APIView):
         return Response(result)
 
     def delete(self, request):
-        '''
-        # Routine 삭제
-        input
-        {
-            account_id: int,
-            routine_id: int
-        }
-
-        output
-        {
-            data: dict{
-                routine_id: int
-            },
-            message: dict{
-                msg: str,
-                status: str("ROUTINE_DELETE_OK")
-            }
-        }
-        '''
         try:
-            ...
+            account_id = request.data.get('account_id', None)
+            routine_id = request.data.get('routine_id', None)
+
+            result = {
+                    "data": {"routine_id": routine_id}
+            }
+
+            routine_obj = Routine.objects.filter(
+                    routine_id=routine_id,
+                    account_id=account_id
+                ).first()
+            if routine_obj:
+                routine_obj.delete()
+                message = {
+                    "msg": "",
+                    "status": STATUS_OK['DELETE']
+                }
+                result['message'] = message
+
         except Exception as e:
-            ...
+            message = {
+                "msg": str(e),
+                "status": STATUS_FAIL['DELETE']
+            }
+            result['message'] = message
         return Response(result)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated,])
 def get_routine(request):
-    # Routine 단건 조회
     try:
         message = {
             "msg": "조회 실패",
@@ -181,36 +183,42 @@ def get_routine(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated,])
 def get_routine_list(request):
-    '''
-    # Routine 목록 조회
-    input
-    {
-        account_id: int,
-        today: date(yyyy-mm-dd)
-    }
-
-    output
-    {
-        data: list[
-            dict{
-                goal: str("     2 "),
-                id: int,
-                result: str("NOT"),
-                title: str
-            }...
-        ],
-        message: dict{
-            msg: str,
-            status: str("ROUTINE_LIST_OK")
-        }
-    }
-    '''
     try:
-        ...
+        message = {
+            "msg": "조회 실패",
+            "status": STATUS_FAIL["LIST"]
+        }
+        results = {'message': message}
+        objs_info = list()
+
+        account_id = request.data.get('account_id', None)
+        today = request.data.get('today', None)
+
+        account_obj = User.objects.filter(id=account_id).first()
+        routine_objs = Routine.objects.filter(
+            account_id=account_id,
+            created_at__range=[f"{today} 00:00:00", f"{today} 23:59:59"]
+        )
+        for obj in routine_objs:
+            result_obj = obj.routineresult_set.first()
+            result = {
+                "goal": obj.goal,
+                "id": obj.routine_id,
+                "result": result_obj.result,
+                "title": obj.title
+            }
+            objs_info.append(result)
+
+        results['data'] = objs_info
+        message = {
+            "msg": "조회 성공",
+            "status": STATUS_OK["LIST"]
+        }
+        results['message'] = message
     except Exception as e:
         message = {
             'msg': e,
-            'status': STATUS_FAIL['CREATE']
+            'status': STATUS_FAIL['LIST']
         }
-        result['message'] = message
-    return Response(result)
+        results['message'] = message
+    return Response(results)

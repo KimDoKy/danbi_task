@@ -1,11 +1,14 @@
 import random
+import datetime
+
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
+
 from .models import RoutineResult, RoutineDay, Routine
 from .utils import change_days_string
-from .views import STATUS_OK, STATUS_FAIL
+from .views import STATUS_OK
 
 
 class RouineTest(TestCase):
@@ -82,7 +85,6 @@ class RouineTest(TestCase):
     def test_modify_routine(self):
         token = self.get_token()
         routine_obj = Routine.objects.first()
-        old_day_obj = RoutineDay.objects.filter(routine_id=routine_obj).first()
 
         data = {
             "title": "update title",
@@ -100,29 +102,39 @@ class RouineTest(TestCase):
         modified_routine_obj = Routine.objects.first()
         modified_day_obj = RoutineDay.objects.filter(routine_id=routine_obj).first()
 
+        self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data['message']['status'], STATUS_OK['UPDATE'])
         self.assertEqual(routine_obj.routine_id, modified_routine_obj.routine_id)
         self.assertNotEqual(routine_obj.title, modified_routine_obj.title)
         self.assertEqual(modified_day_obj.day, change_days_string(data['days']))
 
-    '''
     def test_delete_routine(self):
         token = self.get_token()
-        data = {}
+        data = {
+            "routine_id": 1,
+            "account_id": 1
+        }
         res = self.client.delete(
             self.routine_url,
             data=data,
             HTTP_AUTHORIZATION=token,
         )
-        self.assertEqual()
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['message']['status'], STATUS_OK['DELETE'])
+        is_obj = Routine.objects.filter(routine_id=1).first()
+        self.assertFalse(is_obj)
 
     def test_routine_check_list(self):
         token = self.get_token()
-        data = {}
-        res = self.client.get(
+        today = datetime.datetime.now().date()
+        data = {
+            "account_id": 1,
+            "today": today
+        }
+        res = self.client.post(
             self.routine_list_url,
             data=data,
             HTTP_AUTHORIZATION=token,
         )
-        self.assertEqual()
-    '''
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['message']['status'], STATUS_OK['LIST'])
