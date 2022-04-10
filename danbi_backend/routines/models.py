@@ -24,12 +24,12 @@ class Routine(models.Model):
     def create_result(self):
         RoutineResult.objects.create(routine_id=self)
 
-    def create_day(self, day):
+    def create_days(self, days:list):
         data = {
-            'day': day,
+            'day': days,
             'routine_id': self
         }
-        RoutineDay.objects.create(**data)
+        day_obj = RoutineDay.objects.create(**data)
 
 
 class RoutineResult(models.Model):
@@ -54,19 +54,10 @@ class RoutineResult(models.Model):
 
 # 복합키 사용해야 함
 class RoutineDay(models.Model):
-    DAYS = [
-        ('SUN', 'sun'),
-        ('MON', 'mon'),
-        ('TUE', 'tue'),
-        ('WED', 'wed'),
-        ('THU', 'thu'),
-        ('FRI', 'fri'),
-        ('SAT', 'sat')
-    ]
-    day = models.CharField(max_length=6, choices=DAYS)
+    day = models.CharField(max_length=27)
     routine_id = models.ForeignKey(Routine, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
-        return self.routine_result_id
+        return f"{self.routine_id.routine_id} - {self.day}"

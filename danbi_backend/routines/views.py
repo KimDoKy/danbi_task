@@ -11,6 +11,7 @@ from .serializers import (
     RoutineResultSerializer,
     RoutineDaySerializer,
 )
+from .utils import change_days_string
 
 
 STATUS_OK = {
@@ -43,8 +44,7 @@ class RoutineView(APIView):
                 routine_obj.create_result()
                 days = request.data.getlist('days', None)
                 if days:
-                    for day in days:
-                        routine_obj.create_day(day)
+                    routine_obj.create_days(days)
 
                 data = {'routine_id': serializer.data['routine_id']}
                 result['data'] = data
@@ -69,32 +69,48 @@ class RoutineView(APIView):
         return Response(result)
 
     def put(self, request, routine_id):
-        '''
-        # Routine 수정
-        input
-        {
-            title: str,
-            category: str,
-            goal: str,
-            is_alarm: bool,
-            days: list()
-        }
-
-        output
-        {
-            data: dict{
-                routine_id: int
-            },
-            message: dict{
-                msg: str,
-                status: str("ROUTINE_UPDATE_OK")
-            }
-        }
-        '''
         try:
-            ...
+            result = {
+                "data": {
+                    "routine_id": routine_id
+                }
+            }
+            routine_obj = Routine.objects.filter(routine_id=routine_id).first()
+            if routine_obj:
+                data = copy.deepcopy(request.data)
+                data['account_id'] = request.user.pk
+                serializer = RoutineSerializer(routine_obj, data=data)
+                if serializer.is_valid():
+                    routine_obj = serializer.save()
+                    days = request.data.getlist('days', None)
+                    if days:
+                        routine_id = routine_obj.routineday_set.first()
+                        data = {
+                            "routine_id": routine_id.pk,
+                            "day": change_days_string(days)
+                        }
+                        routine_day_serializer = RoutineDaySerializer(routine_obj.routineday_set.first(), data=data)
+                        if routine_day_serializer.is_valid():
+                            routine_day_serializer.save()
+                        else:
+                            print(routine_day_serializer.errors)
+                    message = {
+                        'msg': '',
+                        'status': STATUS_OK['UPDATE']
+                    }
+                    result['message'] = message
+                else:
+                    message = {
+                        'msg': serializer.errors,
+                        'status': STATUS_FAIL['UPDATE']
+                    }
+                    result['message'] = message
         except Exception as e:
-            ...
+            message = {
+                'msg': e,
+                'status': STATUS_FAIL['UPDATE']
+            }
+            result['message'] = message
         return Response(result)
 
     def delete(self, request):
@@ -192,5 +208,9 @@ def get_routine_list(request):
     try:
         ...
     except Exception as e:
-        ...
+        message = {
+            'msg': e,
+            'status': STATUS_FAIL['CREATE']
+        }
+        result['message'] = message
     return Response(result)

@@ -4,12 +4,14 @@ from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
 from .models import RoutineResult, RoutineDay, Routine
+from .utils import change_days_string
 from .views import STATUS_OK, STATUS_FAIL
 
 
 class RouineTest(TestCase):
     def setUp(self):
         self.user_data = {'email': 'test@wink.com', 'password': 'danbi1234!@#$'}
+        self.days = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
 
         self.client = APIClient()
 
@@ -18,7 +20,7 @@ class RouineTest(TestCase):
         self.routine_list_url = reverse('routines:list')
 
         self.create_user()
-        self.cerate_test_routine()
+        self.create_test_routine()
 
     def create_user(self):
         get_user_model().objects.create_user(**self.user_data)
@@ -28,7 +30,7 @@ class RouineTest(TestCase):
         token = 'jwt ' + res.data.get('token', None)
         return token
 
-    def cerate_test_routine(self):
+    def create_test_routine(self):
         self.get_token()
         titles = [f"title{i}" for i in range(10)]
         for title in titles:
@@ -41,9 +43,9 @@ class RouineTest(TestCase):
             }
             obj = Routine.objects.create(**data)
             obj.create_result()
-            days = random.choices(RoutineDay.DAYS, k=random.randint(1,7))
-            for day in days:
-                obj.create_day(day)
+            days = random.sample(self.days, k=random.randint(1,7))
+            days = change_days_string(days)
+            obj.create_days(days)
 
     def test_create_routine(self):
         token = self.get_token()
@@ -77,19 +79,33 @@ class RouineTest(TestCase):
         self.assertEqual(res.data['data']['id'], data['routine_id'])
         self.assertEqual(res.data['message']['status'], STATUS_OK['DETAIL'])
 
-    '''
     def test_modify_routine(self):
         token = self.get_token()
-        data = {}
+        routine_obj = Routine.objects.first()
+        old_day_obj = RoutineDay.objects.filter(routine_id=routine_obj).first()
 
-        url = self.check_list_url + '/' + routine_id
+        data = {
+            "title": "update title",
+            "category": Routine.ROUTINE_CATEGORY[0][0],
+            "goal": "",
+            "is_alarm": True,
+            "days": ["MON", "SUN"]
+        }
+        url = f"{self.routine_url}{routine_obj.routine_id}/"
         res = self.client.put(
             url,
             data=data,
             HTTP_AUTHORIZATION=token,
         )
-        self.assertEqual()
+        modified_routine_obj = Routine.objects.first()
+        modified_day_obj = RoutineDay.objects.filter(routine_id=routine_obj).first()
 
+        self.assertEqual(res.data['message']['status'], STATUS_OK['UPDATE'])
+        self.assertEqual(routine_obj.routine_id, modified_routine_obj.routine_id)
+        self.assertNotEqual(routine_obj.title, modified_routine_obj.title)
+        self.assertEqual(modified_day_obj.day, change_days_string(data['days']))
+
+    '''
     def test_delete_routine(self):
         token = self.get_token()
         data = {}
