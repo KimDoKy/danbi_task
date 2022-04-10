@@ -42,7 +42,7 @@ class RoutineResult(models.Model):
         (DONE, '완료'),
     ]
     routine_result_id = models.AutoField(primary_key=True)
-    routine_id = models.ForeignKey(Routine, on_delete=models.CASCADE)
+    routine_id = models.ForeignKey(Routine, on_delete=models.CASCADE, related_name="results")
     result = models.CharField(max_length=6, choices=RESULT, default=NOT)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -55,7 +55,7 @@ class RoutineResult(models.Model):
 # 복합키 사용해야 함
 class RoutineDay(models.Model):
     day = models.CharField(max_length=27)
-    routine_id = models.ForeignKey(Routine, on_delete=models.CASCADE)
+    routine_id = models.ForeignKey(Routine, on_delete=models.CASCADE, related_name="days")
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)
 
