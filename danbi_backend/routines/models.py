@@ -31,6 +31,12 @@ class Routine(models.Model):
         }
         day_obj = RoutineDay.objects.create(**data)
 
+    def obj_delete(self):
+        results_obj = self.results.first()
+        results_obj.is_deleted = True
+        results_obj.save()
+        self.delete()
+
 
 class RoutineResult(models.Model):
     NOT = 'NOT'
@@ -42,8 +48,10 @@ class RoutineResult(models.Model):
         (DONE, '완료'),
     ]
     routine_result_id = models.AutoField(primary_key=True)
-    routine_id = models.ForeignKey(Routine, on_delete=models.CASCADE, related_name="results")
-    result = models.CharField(max_length=6, choices=RESULT, default=NOT)
+    routine_id = models.ForeignKey(
+        Routine, on_delete=models.SET_NULL, null=True, 
+        related_name="results")
+    result = models.CharField(max_length=4, choices=RESULT, default=NOT)
     is_deleted = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     modified_at = models.DateTimeField(auto_now=True)

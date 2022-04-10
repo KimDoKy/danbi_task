@@ -106,7 +106,7 @@ class RoutineView(APIView):
                     account_id=account_id
                 )
             if routine_obj:
-                routine_obj.delete()
+                routine_obj.obj_delete()
                 msg = API_MESSAGE_OK['DELETE']
                 status = STATUS_OK['DELETE']
         except Exception as e:
@@ -187,6 +187,61 @@ def get_routine_list(request):
 
         msg = API_MESSAGE_OK["LIST"]
         status = STATUS_OK["LIST"]
+    except Exception as e:
+        msg = str(e)
+    finally:
+        message = {"msg": msg, "status": status}
+        results['message'] = message
+    return Response(results)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated,])
+def update_after_routine(request):
+    '''
+    일정이 지난 후 진행한 할 일들에 대한 해결 여부 기록
+    input
+    {
+        routine_id: int,
+        result: str(NOT, TRY, DONE)
+    }
+    output
+    {
+        data:
+            routine_result_id: int
+            result: str(NOT, TRY, DONE)
+        message:
+            msg: str,
+            status: str
+    }
+    '''
+    results = dict()
+    try:
+        msg:str = API_MESSAGE_FAIL["RESULT_UPDATE"]
+        status:str = STATUS_FAIL["RESULT_UPDATE"]
+
+        routine_id:int = request.data.get('routine_id', None)
+        result:str = request.data.get('result', None)
+
+        routine_obj = get_object_or_404(
+            Routine,
+            routine_id=routine_id
+        )
+        result_obj = routine_obj.results.first()
+        data = {'result': result}
+        serializer = RoutineResultSerializer(result_obj, data=data)
+        if serializer.is_valid():
+            result_obj = serializer.save()
+            data = {
+                "routine_result_id": result_obj.routine_result_id,
+                "result": result_obj.result
+            }
+            results['data'] = data
+
+            msg = API_MESSAGE_OK["RESULT_UPDATE"]
+            status = STATUS_OK["RESULT_UPDATE"]
+        else:
+            msg = serializer.errors
     except Exception as e:
         msg = str(e)
     finally:

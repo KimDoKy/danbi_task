@@ -4,6 +4,7 @@ STATUS_OK = {
     "DETAIL": "ROUTINE_DETAIL_OK",
     "UPDATE": "ROUTINE_UPDATE_OK",
     "DELETE": "ROUTINE_DELETE_OK",
+    "RESULT_UPDATE": "RESULT_UPDATE_OK"
 }
 
 STATUS_FAIL = {
@@ -12,6 +13,7 @@ STATUS_FAIL = {
     "DETAIL": "ROUTINE_DETAIL_FAIL",
     "UPDATE": "ROUTINE_UPDATE_FAIL",
     "DELETE": "ROUTINE_DELETE_FAIL",
+    "RESULT_UPDATE": "RESULT_UPDATE_FAIL"
 }
 
 API_MESSAGE_OK = {
@@ -20,6 +22,7 @@ API_MESSAGE_OK = {
     "DELETE": "Routine이 삭제되었습니다.",
     "DETAIL": "Routine 조회 성공",
     "LIST": "Routine 리스트 조회 성공",
+    "RESULT_UPDATE": "Result 업데이트 성공"
 }
 
 API_MESSAGE_FAIL = {
@@ -28,4 +31,5 @@ API_MESSAGE_FAIL = {
 
     "DETAIL": "Routine 조회 실패",
     "LIST": "Routine 리스트 조회 실패",
+    "RESULT_UPDATE": "Result 업데이트 실패"
 }

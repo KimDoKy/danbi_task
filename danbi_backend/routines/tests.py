@@ -2,6 +2,7 @@ import random
 import datetime
 
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from django.test import TestCase
 from django.urls import reverse
 from rest_framework.test import APIClient
@@ -21,6 +22,7 @@ class RouineTest(TestCase):
         self.routine_url = reverse('routines:routine')
         self.routine_target_url = reverse('routines:target')
         self.routine_list_url = reverse('routines:list')
+        self.update_result_url = reverse('routines:update-result')
 
         self.create_user()
         self.create_test_routine()
@@ -100,7 +102,7 @@ class RouineTest(TestCase):
             HTTP_AUTHORIZATION=token,
         )
         modified_routine_obj = Routine.objects.first()
-        modified_day_obj = RoutineDay.objects.filter(routine_id=routine_obj).first()
+        modified_day_obj = routine_obj.days.first()
 
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data['message']['status'], STATUS_OK['UPDATE'])
@@ -110,6 +112,9 @@ class RouineTest(TestCase):
 
     def test_delete_routine(self):
         token = self.get_token()
+        routine_obj = get_object_or_404(Routine, routine_id=1)
+        result_obj = routine_obj.results.first()
+
         data = {
             "routine_id": 1,
             "account_id": 1
@@ -123,6 +128,12 @@ class RouineTest(TestCase):
         self.assertEqual(res.data['message']['status'], STATUS_OK['DELETE'])
         is_obj = Routine.objects.filter(routine_id=1).first()
         self.assertFalse(is_obj)
+        is_result_obj = get_object_or_404(
+            RoutineResult,
+            routine_result_id=result_obj.routine_result_id
+        )
+        self.assertNotEqual(result_obj.is_deleted, is_result_obj.is_deleted)
+        self.assertNotEqual(result_obj.routine_id, is_result_obj.routine_id)
 
     def test_routine_check_list(self):
         token = self.get_token()
@@ -138,3 +149,27 @@ class RouineTest(TestCase):
         )
         self.assertEqual(res.status_code, 200)
         self.assertEqual(res.data['message']['status'], STATUS_OK['LIST'])
+
+    def test_routine_update_result(self):
+        routine_obj = get_object_or_404(
+            Routine,
+            routine_id=1
+        )
+        result_obj = routine_obj.results.first()
+
+        token = self.get_token()
+        data = {
+            "account_id": 1,
+            "routine_id": 1,
+            "result": "DONE"
+        }
+        res = self.client.post(
+            self.update_result_url,
+            data=data,
+            HTTP_AUTHORIZATION=token,
+        )
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(res.data['message']['status'], STATUS_OK['RESULT_UPDATE'])
+
+        new_result_obj = routine_obj.results.first()
+        self.assertNotEqual(result_obj.result, new_result_obj.result)
