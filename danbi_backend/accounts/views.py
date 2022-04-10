@@ -1,11 +1,14 @@
 import sys
+
 from django.contrib.auth import get_user_model
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
+
 from .models import LogoutToken
 from .serializers import LogoutTokenSerializer, UserSerializer
 from .validators import CustomPasswordValidator
+
 
 class RegistrationView(APIView):
     permission_classes = (AllowAny,)

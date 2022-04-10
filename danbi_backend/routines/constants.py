@@ -24,6 +24,8 @@ API_MESSAGE_OK = {
 
 API_MESSAGE_FAIL = {
     "CREATE": "Routine 생성이 실패하였습니다.",
+    "DELETE": "Routine 삭제가 실패하였습니다.",
+
     "DETAIL": "Routine 조회 실패",
     "LIST": "Routine 리스트 조회 실패",
 }
